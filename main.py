@@ -32,7 +32,7 @@ def main():
         (4, 4): 20
     }
 
-    money = 150
+    money = 200
 
     world = WorldGeneration(screen_width=SCREEN_WIDTH,
                             screen_height=SCREEN_HEIGHT,
@@ -154,7 +154,7 @@ def main():
             # Add the "contexto" outside of "cells"
             contexto = {
                 "contexto": {
-                    "cantidadTripulacion": 3,
+                    "cantidadTripulacion": 1,
                     "materialEstructural": "compuesto",
                     "resistenciaRadiacion": 8
                 }
