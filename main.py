@@ -52,7 +52,6 @@ def main():
             topbar.export_button.rect,
             topbar.import_button.rect
         ]
-
         if topbar.type_dropdown.is_open:
             for i in range(len(topbar.type_dropdown.options)):
                 rect = pygame.Rect(
@@ -62,7 +61,6 @@ def main():
                     topbar.type_dropdown.rect.height,
                 )
                 rects.append(rect)
-
         if topbar.toggle_button.is_open:
             for i in range(len(topbar.toggle_button.options)):
                 rect = pygame.Rect(
@@ -93,19 +91,15 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
             topbar.handle_event(event)
-
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-
                 if topbar.export_button.rect.collidepoint(mouse_pos):
                     export_clicked = True
                     continue
                 elif topbar.import_button.rect.collidepoint(mouse_pos):
                     import_clicked = True
                     continue
-
                 if is_menu_open() or click_on_ui(mouse_pos):
                     pass
                 else:
@@ -113,23 +107,18 @@ def main():
                         tile_size = world.tile_size
                         grid_pixel_width = tile_size * world.grid_size
                         x_offset = (SCREEN_WIDTH - grid_pixel_width) // 2
-
                         wx = mouse_pos[0] + player.camera.x - x_offset
                         wy = mouse_pos[1] - topbar_height + player.camera.y
                         grid_x = int(wx // tile_size)
                         grid_y = int(wy // tile_size)
-
                         if 0 <= grid_x < world.grid_size and 0 <= grid_y < world.grid_size:
                             current_action = topbar.draw_remove_toggle.get_current_option().lower() + "_tile"
                             player.action = current_action
-
                             selected_shape = topbar.toggle_button.get_current_option()
                             current_shape = size_map.get(selected_shape, (1, 1))
                             width, height = current_shape
-
                             cost = cost_map.get(current_shape, 5)
                             selected_type = topbar.type_dropdown.get_current_option()
-
                             if player.action == "draw_tile":
                                 if money >= cost:
                                     placed = world.add_tile_block(grid_x, grid_y, width, height, selected_type, cost)
@@ -162,7 +151,19 @@ def main():
                 }
                 placed_tiles_values.append(cell)
 
-            data = {"cells": placed_tiles_values}
+            # Add the "contexto" outside of "cells"
+            contexto = {
+                "contexto": {
+                    "cantidadTripulacion": 3,
+                    "materialEstructural": "compuesto",
+                    "resistenciaRadiacion": 8
+                }
+            }
+            # Compose the overall data with "cells" and "contexto" as separate top-level lists
+            data = {
+                "cells": placed_tiles_values,
+                "contexto": [contexto["contexto"]]  # Wrap in list to keep structure consistent
+            }
 
             with open("exported_tiles.json", "w") as f:
                 json.dump(data, f, indent=2)
@@ -179,13 +180,8 @@ def main():
                     gy = cell.get("y", 0)
                     tile_type = cell.get("type", "PRIVATE").lower()
                     props = cell.get("props", {})
-
-                    # Assuming 1x1 size tiles on import or modify as needed
                     width, height = 1, 1
-
-                    # Add tile block, ignore cost argument for imported tiles or set as needed
                     world.add_tile_block(gx, gy, width, height, tile_type, cost=0)
-
                     block = world.get_block_at(gx, gy)
                     if block:
                         block.masa = props.get("masa", 0.0)
@@ -193,14 +189,12 @@ def main():
                         block.costo = props.get("costo", 0.0)
                         block.limpieza = props.get("limpieza", 1.0)
                         block.permanencia = props.get("permanencia", 1)
-
                 print("Imported tiles loaded from imported_tiles.json")
             except Exception as e:
                 print("Error importing tiles:", e)
 
         selected_shape = topbar.toggle_button.get_current_option()
         current_shape = size_map.get(selected_shape, (1, 1))
-
         keys = pygame.key.get_pressed()
         player.update_position(keys)
 
@@ -209,7 +203,6 @@ def main():
             tile_size = world.tile_size
             grid_pixel_width = tile_size * world.grid_size
             x_offset = (SCREEN_WIDTH - grid_pixel_width) // 2
-
             wx = mx + player.camera.x - x_offset
             wy = my - topbar_height + player.camera.y
             grid_x = int(wx // tile_size)

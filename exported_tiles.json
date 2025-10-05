@@ -1,76 +1,35 @@
 {
   "cells": [
     {
-      "x": 6,
-      "y": 2,
-      "type": "EXERCISE",
-      "props": {
-        "masa": 52.73933331778635,
-        "volumen": 3.38,
-        "costo": 5,
-        "limpieza": 0,
-        "permanencia": 0
-      }
-    },
-    {
-      "x": 9,
-      "y": 2,
-      "type": "EXERCISE",
-      "props": {
-        "masa": 35.9138240340313,
-        "volumen": 3.92,
-        "costo": 5,
-        "limpieza": 0,
-        "permanencia": 0
-      }
-    },
-    {
-      "x": 13,
-      "y": 2,
-      "type": "EXERCISE",
-      "props": {
-        "masa": 32.02693425978893,
-        "volumen": 6.12,
-        "costo": 5,
-        "limpieza": 0,
-        "permanencia": 0
-      }
-    },
-    {
       "x": 7,
       "y": 4,
-      "type": "WASTE",
+      "type": "PRIVATE",
       "props": {
-        "masa": 43.7744101265293,
-        "volumen": 2.36,
-        "costo": 10,
-        "limpieza": 0,
-        "permanencia": 0
-      }
-    },
-    {
-      "x": 17,
-      "y": 4,
-      "type": "WASTE",
-      "props": {
-        "masa": 11.156846545152764,
-        "volumen": 3.76,
-        "costo": 10,
-        "limpieza": 0,
-        "permanencia": 0
-      }
-    },
-    {
-      "x": 21,
-      "y": 11,
-      "type": "MEDICAL",
-      "props": {
-        "masa": 12.815379926461326,
-        "volumen": 1.2,
+        "masa": 60.89353629952028,
+        "volumen": 4.35,
         "costo": 20,
         "limpieza": 1,
         "permanencia": 1
       }
+    },
+    {
+      "x": 15,
+      "y": 7,
+      "type": "PRIVATE",
+      "props": {
+        "masa": 40.6564300601205,
+        "volumen": 10.76,
+        "costo": 20,
+        "limpieza": 1,
+        "permanencia": 1
+      }
+    }
+  ],
+  "contexto": [
+    {
+      "cantidadTripulacion": 3,
+      "materialEstructural": "compuesto",
+      "resistenciaRadiacion": 8
     }
   ]
 }
