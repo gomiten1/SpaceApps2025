@@ -264,7 +264,7 @@ def calcularScoreErgonomia(celdas):
     return {"scoreErgonomia": scoreErgonomia}
 
 def calcularScoreSostenibilidad(materialEstructuralGlobal):
-    materialScores = {'ISRU-derivado': 1.0, 'Compuesto': 0.6, 'Aluminio': 0.2}
+    materialScores = {'autonomo': 1.0, 'metal': 0.5, 'compuesto':0.6, 'inflable': 0.2}
     return {"scoreSostenibilidad": materialScores.get(materialEstructuralGlobal, 0.1)}
 
 def calcularScoreProteccionRadiacion(resistenciaRadiacionGlobal):
@@ -277,7 +277,7 @@ def generarScoresHabitat(habitatLayout, contextoMision):
     
 
     cantidadTripulacion = contextoMision.get('cantidadTripulacion', 4)
-    materialEstructural = contextoMision.get('materialEstructural', 'Inflable')
+    materialEstructural = contextoMision.get('materialEstructural', 'INFLABLE')
     resistenciaRadiacion = contextoMision.get('resistenciaRadiacion', 7)
     
     scores['scoreChecklist'] = calcularScoreChecklist(celdas, cantidadTripulacion)
@@ -302,41 +302,73 @@ def generarScoresHabitat(habitatLayout, contextoMision):
             
     return scores
 
+# Los pesos determinan la importancia de cada métrica en la calificación final.
+PONDERACIONES = {
+   
+    "scoreZonificacion":        2.5,  # Clave para la higiene y calidad de vida.
+    "scorePrivacidad":          2.0,  # Vital para la salud mental en misiones largas.
+    "scoreAreaDeTrabajo":       2.0,  # Afecta directamente la eficiencia de la tripulación.
+    "scoreAdyacencias":         1.8,  # Mide la inteligencia del flujo de trabajo.
+    "scoreErgonomia":           1.2,  # Calidad de vida, acceso a lo más usado.
+    "scoreVistaEspacial":       0.8,  # Es un "plus", pero menos crítico que otros.
 
+    "scoreProteccionRadiacion": 3.0,  # La seguridad de la tripulación es máxima prioridad.
+    "scoreMasa":                1.5,  # La masa es un driver principal del costo.
+    "scoreVolumenPorPersona":   1.5,  # Métrica fundamental de habitabilidad.
+
+    "scoreSostenibilidad":      1.0,  # Importante para la visión a largo plazo.
+    "scoreAutonomia":           1.2,  # Reduce la carga de trabajo y el riesgo.
+}
+
+def calcularCalificacionFinal(subScores):
+    """
+    Calcula una calificación final de 0 a 100 a partir de un diccionario de sub-scores,
+    aplicando una ponderación para cada métrica.
+    """
+    puntuacionPonderadaTotal = 0.0
+    sumaDePesos = 0.0
+
+    for nombreScore, valorScore in subScores.items():
+        if nombreScore in PONDERACIONES:
+            peso = PONDERACIONES[nombreScore]
+            puntuacionPonderadaTotal += valorScore * peso
+            sumaDePesos += peso
+            
+    if sumaDePesos == 0:
+        return 0.0
+        
+    # Normaliza la puntuación ponderada para que vuelva a estar entre 0 y 1
+    scoreNormalizado = puntuacionPonderadaTotal / sumaDePesos
+    
+    # Escala el resultado final a 0-100
+    calificacionFinal = scoreNormalizado * 100
+    
+    return calificacionFinal
+
+def leerHabitatDesdeJsonTiles(path):
+    """
+    Lee un JSON con estructura:
+    {
+      "cells": [...],
+      "contexto": [{...}]
+    }
+    y retorna (celdas, contexto) listos para las funciones de scoring.
+    """
+    with open(path, 'r') as f:
+        data = json.load(f)
+    celdas = data.get('cells', [])
+    # contexto es una lista, tomamos el primer elemento si existe
+    contexto = data.get('contexto', [{}])
+    if isinstance(contexto, list):
+        contexto = contexto[0] if contexto else {}
+    return celdas, contexto
 
 # --- 4. EJEMPLO DE USO ---
 
 if __name__ == '__main__':
-
-    layoutEjemplo = {
-      "id": "habitat_alpha_v2",
-      "cells": [
-        {"x": 10, "y": 80, "type": "PRIVATE", "props": {"masa": 1500, "volumen": 12, "costo": 10, "limpieza": 1.0, "permanencia": 1, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 6}},
-        {"x": 80, "y": 80, "type": "HYGIENE", "props": {"masa": 1000, "volumen": 8, "costo": 8, "limpieza": 0.0, "permanencia": 2, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 4}},
-        {"x": 85, "y": 85, "type": "WASTE", "props": {"masa": 500, "volumen": 5, "costo": 5, "limpieza": 0.0, "permanencia": 2, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 4}},
-        {"x": 70, "y": 70, "type": "EXERCISE", "props": {"masa": 1200, "volumen": 10, "costo": 7, "limpieza": 0.0, "permanencia": 1, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 5}},
-        {"x": 10, "y": 10, "type": "FOOD", "props": {"masa": 2000, "volumen": 15, "costo": 12, "limpieza": 1.0, "permanencia": 2, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 5}},
-        {"x": 50, "y": 50, "type": "MAINTENANCE", "props": {"masa": 400, "volumen": 15, "costo": 4, "limpieza": 0.5, "permanencia": 1, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 5}},
-        {"x": 30, "y": 30, "type": "SCIENCE", "props": {"masa": 2500, "volumen": 20, "costo": 20, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "ISRU-derivado", "resistenciaRadiacion": 8}},
-        {"x": 15, "y": 75, "type": "MEDICAL", "props": {"masa": 800, "volumen": 7, "costo": 15, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 6}},
-        {"x": 20, "y": 15, "type": "SOCIAL", "props": {"masa": 1000, "volumen": 20, "costo": 5, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 5}},
-        {"x": 5, "y": 50, "type": "AIRLOCK", "props": {"masa": 3000, "volumen": 10, "costo": 25, "limpieza": 0.0, "permanencia": 2, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 7}},
-        {"x": 90, "y": 10, "type": "LOGISTICS", "props": {"masa": 600, "volumen": 6, "costo": 6, "limpieza": 0.5, "permanencia": 1, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 4}},
-        {"x": 60, "y": 20, "type": "MISSION PLANNING", "props": {"masa": 700, "volumen": 8, "costo": 9, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 5}}
-      ]
-    }
-    contextoAlpha = {
-        "cantidadTripulacion": 1,
-        "materialEstructural": "Compuesto",
-        "resistenciaRadiacion": 7
-    }
-
-    # Creamos una lista de tuplas, donde cada tupla es (layout, contexto)
-    misHabitats = [(layoutEjemplo, contextoAlpha)]
-
-    nombreArchivoSalida = 'exported_tiles.csv'
-    dfResultados = pd.DataFrame([generarScoresHabitat(l, c) for l, c in misHabitats])
-
-    #print(f"\n Scores exportados exitosamente a '{nombreArchivoSalida}'")
-    print("\n--- Contenido ---")
-    print(dfResultados.to_string())
+    ruta_json = "exported_tiles.json"
+    celdas, contexto = leerHabitatDesdeJsonTiles(ruta_json)
+    scores = generarScoresHabitat({'cells': celdas}, contexto)
+    print(scores)
+    calificacionFinal = calcularCalificacionFinal(scores)
+    print(f"Calificación final: {calificacionFinal:.2f}")

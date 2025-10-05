@@ -1,7 +1,7 @@
 { 
   "contexto": {
     "cantidadTripulacion": 4,
-    "materialEstructural": "Compuesto",
+    "materialEstructural": "compuesto",
     "resistenciaRadiacion": 7
   },
   "cells": [

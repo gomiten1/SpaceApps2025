@@ -1,52 +1,167 @@
 {
   "cells": [
     {
-      "x": 3,
-      "y": 6,
+      "x": 1,
+      "y": 1,
       "type": "PRIVATE",
       "props": {
-        "masa": 63.86113995948321,
-        "volumen": 4.35,
-        "costo": 20,
+        "masa": 60.05198070815104,
+        "volumen": 4.8,
+        "costo": 5,
         "limpieza": 1,
         "permanencia": 1
       }
     },
     {
-      "x": 8,
-      "y": 6,
+      "x": 5,
+      "y": 5,
+      "type": "HYGIENE",
+      "props": {
+        "masa": 72.63988847390662,
+        "volumen": 2.34,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 14,
+      "y": 2,
+      "type": "WASTE",
+      "props": {
+        "masa": 44.31804074602979,
+        "volumen": 3.76,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 4,
+      "y": 10,
+      "type": "EXERCISE",
+      "props": {
+        "masa": 64.7522630139557,
+        "volumen": 3.92,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 13,
+      "y": 7,
+      "type": "FOOD",
+      "props": {
+        "masa": 39.41703999650952,
+        "volumen": 3.3,
+        "costo": 5,
+        "limpieza": 1,
+        "permanencia": 1
+      }
+    },
+    {
+      "x": 9,
+      "y": 12,
       "type": "MAINTENANCE",
       "props": {
-        "masa": 17.702953252663598,
-        "volumen": 4.35,
-        "costo": 20,
+        "masa": 65.3023144686149,
+        "volumen": 1.7,
+        "costo": 5,
         "limpieza": 0.5,
         "permanencia": 0
       }
     },
     {
       "x": 15,
-      "y": 1,
+      "y": 11,
       "type": "SCIENCE",
       "props": {
-        "masa": 97.50551551730359,
-        "volumen": 1.7,
-        "costo": 10,
+        "masa": 13.317222460308468,
+        "volumen": 4.35,
+        "costo": 5,
         "limpieza": 1,
         "permanencia": 1
       }
     },
     {
-      "x": 15,
-      "y": 3,
-      "type": "SCIENCE",
+      "x": 3,
+      "y": 16,
+      "type": "MEDICAL",
       "props": {
-        "masa": 55.81850168984808,
-        "volumen": 4.35,
-        "costo": 10,
+        "masa": 23.98358687593078,
+        "volumen": 3.4,
+        "costo": 5,
         "limpieza": 1,
         "permanencia": 1
       }
+    },
+    {
+      "x": 10,
+      "y": 16,
+      "type": "SOCIAL",
+      "props": {
+        "masa": 22.067388246962395,
+        "volumen": 18.2,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 22,
+      "y": 5,
+      "type": "LOGISTICS",
+      "props": {
+        "masa": 84.03788879582733,
+        "volumen": 4.35,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 20,
+      "y": 17,
+      "type": "MISSION PLANNING",
+      "props": {
+        "masa": 63.2031731814725,
+        "volumen": 3.42,
+        "costo": 5,
+        "limpieza": 0.5,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 16,
+      "y": 23,
+      "type": "AIRLOCK",
+      "props": {
+        "masa": 95.55294247875767,
+        "volumen": 4.62,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 13,
+      "y": 23,
+      "type": "AIRLOCK",
+      "props": {
+        "masa": 4.755595245351436,
+        "volumen": 4.62,
+        "costo": 5,
+        "limpieza": 0,
+        "permanencia": 0
+      }
+    }
+  ],
+  "contexto": [
+    {
+      "cantidadTripulacion": 1,
+      "materialEstructural": "compuesto",
+      "resistenciaRadiacion": 8
     }
   ]
 }
