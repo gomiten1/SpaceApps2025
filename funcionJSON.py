@@ -118,7 +118,7 @@ def calcularScoresLayout(celdas):
         scoreZonificacion = _normalize(distancia, 0, maxDist * 0.75)
 
     # --- Adyacencias Deseadas ---
-    PARES_DESEADOS = [('FOOD', 'SOCIAL'), ('AIRLOCK', 'MAINTENANCE'), ('SCIENCE', 'AIRLOCK')]
+    PARES_DESEADOS = [('FOOD', 'SOCIAL'), ('AIRLOCK', 'MAINTENANCE'), ('SCIENCE', 'AIRLOCK'), ('PRIVATE', 'SCIENCE'), ('PRIVATE', 'MEDICINE'), ('PRIVATE', 'FOOD')]
     posiciones = {c['type']: (c['x'], c['y']) for c in celdas}
     scoresPares = []
     for modA, modB in PARES_DESEADOS:
