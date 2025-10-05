@@ -6,13 +6,16 @@ from player import Player
 from world import WorldGeneration
 from topbar import TopBar
 
+# Import scoring functions from funcionJSON.py
+from funcionJSON import leerHabitatDesdeJsonTiles, generarScoresHabitat, calcularCalificacionFinal
+
 DARK_GRAY = (40, 40, 40)
 
 def main():
     pygame.init()
     SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Tile Placement with Import/Export")
+    pygame.display.set_caption("Tile Placement with Import/Export and Scoring")
     clock = pygame.time.Clock()
 
     topbar = TopBar(SCREEN_WIDTH)
@@ -33,6 +36,9 @@ def main():
     }
 
     money = 200
+    calificacionFinal = 0.0  # Initialize score
+
+    placed_tiles_values = []  # Initialize list to store placed tile data
 
     world = WorldGeneration(screen_width=SCREEN_WIDTH,
                             screen_height=SCREEN_HEIGHT,
@@ -42,7 +48,8 @@ def main():
 
     topbar.toggle_button.current_index = topbar.toggle_button.options.index("4x4")
 
-    placed_tiles_values = []
+    # Initialize font for score display
+    font = pygame.font.SysFont(None, 24)
 
     def get_ui_rects():
         rects = [
@@ -151,7 +158,6 @@ def main():
                 }
                 placed_tiles_values.append(cell)
 
-            # Add the "contexto" outside of "cells"
             contexto = {
                 "contexto": {
                     "cantidadTripulacion": 1,
@@ -159,16 +165,21 @@ def main():
                     "resistenciaRadiacion": 8
                 }
             }
-            # Compose the overall data with "cells" and "contexto" as separate top-level lists
             data = {
                 "cells": placed_tiles_values,
-                "contexto": [contexto["contexto"]]  # Wrap in list to keep structure consistent
+                "contexto": [contexto["contexto"]]
             }
 
             with open("exported_tiles.json", "w") as f:
                 json.dump(data, f, indent=2)
 
             print("Exported tiles saved to exported_tiles.json")
+
+            # Calculate and update score from JSON data directly
+            celdas, contexto_score = data["cells"], data["contexto"][0]
+            scores = generarScoresHabitat({'cells': celdas}, contexto_score)
+            calificacionFinal = calcularCalificacionFinal(scores)
+            print(f"Calificación final (calculated on export): {calificacionFinal:.2f}")
 
         if import_clicked:
             try:
@@ -225,7 +236,21 @@ def main():
             hover_surface.fill((255, 255, 0, 100))
             screen.blit(hover_surface, hover_rect.topleft)
 
+        # Draw top bar
         topbar.draw(screen, money)
+
+        # Display score label and value on right side of grid
+        score_label = font.render("Score", True, (255, 255, 255))
+        score_number = font.render(f"{calificacionFinal:.2f}", True, (255, 255, 255))
+        
+        # Position at right side, below topbar padding
+        label_x = SCREEN_WIDTH - score_label.get_width() - 10
+        label_y = topbar_height + 10
+        number_x = label_x
+        number_y = label_y + score_label.get_height() + 2
+        
+        screen.blit(score_label, (label_x, label_y))
+        screen.blit(score_number, (number_x, number_y))
 
         pygame.display.flip()
         clock.tick(60)
