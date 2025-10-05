@@ -13,7 +13,8 @@ MODULE_TEMPLATES = {
 "MEDICAL": {"masa": 0.0, "volumen": 0.0, "costo": 0.0, "limpieza": 1.0, "permanencia": 0},
 "SOCIAL": {"masa": 0.0, "volumen": 0.0, "costo": 0.0, "limpieza": 0.0, "permanencia": 0},
 "LOGISTICS": {"masa": 0.0, "volumen": 0.0, "costo": 0.0, "limpieza": 0.0, "permanencia": 2},
-"AIRLOCK": {"masa": 0.0, "volumen": 0.0, "costo": 0.0, "limpieza": 0.0, "permanencia": 2}
+"AIRLOCK": {"masa": 0.0, "volumen": 0.0, "costo": 0.0, "limpieza": 0.0, "permanencia": 2},
+"MISSION PLANNING": {"masa": 0.0, "volumen": 0.0, "costo": 0.0, "limpieza": 0.5, "permanencia": 0}
 }
 
 
@@ -31,6 +32,11 @@ def process_layout(game_data: dict, output_path: Path):
 
 if __name__ == "__main__":
     game_output = {
+        "contexto": {
+            "cantidadTripulacion": 4,
+            "materialEstructural": "Compuesto",
+            "resistenciaRadiacion": 7
+        },
         "cells": [
             {"x": 0, "y": 0, "type": "EMPTY"},
             {"x": 1, "y": 0, "type": "PRIVATE"},
@@ -43,7 +49,8 @@ if __name__ == "__main__":
             {"x": 8, "y": 0, "type": "MEDICAL"},
             {"x": 9, "y": 0, "type": "SOCIAL"},
             {"x": 10, "y": 0, "type": "LOGISTICS"},
-            {"x": 11, "y": 0, "type": "AIRLOCK"}
+            {"x": 11, "y": 0, "type": "AIRLOCK"},
+            {"x": 12, "y": 0, "type": "MISSION PLANNING"}
         ]
     }
 
