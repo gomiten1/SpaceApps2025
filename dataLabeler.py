@@ -63,6 +63,14 @@ def etiquetarDatos(archivoJsonEntrada, archivoCsvSalida):
             print(f"  - {c['type']:<15} | Volumen: {vol} m³")
         print("-"*50)
 
+        #Lista de scores
+        # Calcular los scores automáticos
+        scoresCalculados = generarScoresHabitat(layout, contexto)
+        print("Scores calculados automáticamente:")
+        for key, value in scoresCalculados.items():
+            if key != 'calificacionExperto':  # Evitar mostrar la calificación del experto aquí
+                print(f"  {key}: {value}")
+
         # Pedir calificación al experto
         calificacionExperto = -1
         while not (0 <= calificacionExperto <= 100):
@@ -72,8 +80,7 @@ def etiquetarDatos(archivoJsonEntrada, archivoCsvSalida):
             except ValueError:
                 print("Error: Por favor, introduce un número entero.")
 
-        # Calcular los scores automáticos
-        scoresCalculados = generarScoresHabitat(layout, contexto)
+        
         
         # Añadir la calificación del experto (normalizada de 0 a 1)
         scoresCalculados['calificacionExperto'] = calificacionExperto / 100.0
