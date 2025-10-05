@@ -1,0 +1,136 @@
+{
+  "cells": [
+    {
+      "x": 1,
+      "y": 0,
+      "type": "PRIVATE",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 1.0,
+        "permanencia": 1
+      }
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "type": "HYGIENE",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 2
+      }
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "type": "WASTE",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 2
+      }
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "type": "EXERCISE",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 1
+      }
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "type": "FOOD",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 1.0,
+        "permanencia": 2
+      }
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "type": "MAINTENANCE",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.5,
+        "permanencia": 2
+      }
+    },
+    {
+      "x": 7,
+      "y": 0,
+      "type": "SCIENCE",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 1.0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 8,
+      "y": 0,
+      "type": "MEDICAL",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 1.0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 9,
+      "y": 0,
+      "type": "SOCIAL",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 10,
+      "y": 0,
+      "type": "LOGISTICS",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 2
+      }
+    },
+    {
+      "x": 11,
+      "y": 0,
+      "type": "AIRLOCK",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 2
+      }
+    }
+  ]
+}
