@@ -5,8 +5,10 @@ import json
 # --- 1. CONFIGURACIÓN GLOBAL ---
 
 # Dimensiones del hábitat en tiles
-HABITAT_WIDTH_M = 100
-HABITAT_HEIGHT_M = 100
+# Temporalmente reducido a 50x50 para el labeler
+# para que funcione en terminal
+HABITAT_WIDTH_M = 50
+HABITAT_HEIGHT_M = 50
 
 
 # --- 2. FUNCIONES DE CÁLCULO DE SCORES ---
@@ -59,12 +61,12 @@ def calcularScoreChecklist(celdas, cantidadTripulacion):
         'AIRLOCK': 'hay_modulos_airlock'
     }
 
-    presencia = {col: 1.0 for col in COLUMNAS_CHECKLIST}
+    presencia = {col: 0 for col in COLUMNAS_CHECKLIST}
     tipos_presentes = {c['type'] for c in celdas}
 
     for tipo, columna in mapa_tipo_a_columna.items():
         if tipo in tipos_presentes:
-            presencia[columna] = 1.0
+            presencia[columna] = 1
         
     numCamarotes = len([c for c in celdas if c['type'] == 'PRIVATE'])
     if numCamarotes < cantidadTripulacion:
@@ -330,9 +332,9 @@ if __name__ == '__main__':
     # Creamos una lista de tuplas, donde cada tupla es (layout, contexto)
     misHabitats = [(layoutEjemplo, contextoAlpha)]
 
-    nombreArchivoSalida = 'habitat_scores_con_contexto.csv'
+    nombreArchivoSalida = 'exported_tiles.csv'
     dfResultados = pd.DataFrame([generarScoresHabitat(l, c) for l, c in misHabitats])
 
-    print(f"\n Scores exportados exitosamente a '{nombreArchivoSalida}'")
-    print("\n--- Contenido del CSV generado ---")
+    #print(f"\n Scores exportados exitosamente a '{nombreArchivoSalida}'")
+    print("\n--- Contenido ---")
     print(dfResultados.to_string())

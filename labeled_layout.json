@@ -136,6 +136,18 @@
         "limpieza": 0.0,
         "permanencia": 2
       }
+    },
+    {
+      "x": 12,
+      "y": 0,
+      "type": "MISSION PLANNING",
+      "props": {
+        "masa": 0.0,
+        "volumen": 0.0,
+        "costo": 0.0,
+        "limpieza": 0.0,
+        "permanencia": 0
+      }
     }
   ]
 }

@@ -1,0 +1,52 @@
+{
+  "cells": [
+    {
+      "x": 3,
+      "y": 6,
+      "type": "PRIVATE",
+      "props": {
+        "masa": 63.86113995948321,
+        "volumen": 4.35,
+        "costo": 20,
+        "limpieza": 1,
+        "permanencia": 1
+      }
+    },
+    {
+      "x": 8,
+      "y": 6,
+      "type": "MAINTENANCE",
+      "props": {
+        "masa": 17.702953252663598,
+        "volumen": 4.35,
+        "costo": 20,
+        "limpieza": 0.5,
+        "permanencia": 0
+      }
+    },
+    {
+      "x": 15,
+      "y": 1,
+      "type": "SCIENCE",
+      "props": {
+        "masa": 97.50551551730359,
+        "volumen": 1.7,
+        "costo": 10,
+        "limpieza": 1,
+        "permanencia": 1
+      }
+    },
+    {
+      "x": 15,
+      "y": 3,
+      "type": "SCIENCE",
+      "props": {
+        "masa": 55.81850168984808,
+        "volumen": 4.35,
+        "costo": 10,
+        "limpieza": 1,
+        "permanencia": 1
+      }
+    }
+  ]
+}
