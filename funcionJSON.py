@@ -39,7 +39,7 @@ CHECKLIST_DICT = {
 }
 
 
-def calcularScoreChecklist(celdas):
+def calcularScoreChecklist(celdas, cantidadTripulacion):
     """
     Calcula el score base verificando la combinación de módulos presentes
     contra el diccionario de checklist interno.
@@ -65,16 +65,20 @@ def calcularScoreChecklist(celdas):
     for tipo, columna in mapa_tipo_a_columna.items():
         if tipo in tipos_presentes:
             presencia[columna] = 1.0
+        
+    numCamarotes = len([c for c in celdas if c['type'] == 'PRIVATE'])
+    if numCamarotes < cantidadTripulacion:
+        return 0.0 # Penalización máxima si no hay camas para todos
             
     clave_actual = tuple(presencia[col] for col in COLUMNAS_CHECKLIST)
     
     # Busca la clave en el diccionario. Si no la encuentra, devuelve 0.0.
     return CHECKLIST_DICT.get(clave_actual, 0.0)
 
-def calcularScoresIngenieria(celdas):
+def calcularScoresIngenieria(celdas, cantidadTripulacion):
     """Calcula scores de Masa, Volumen."""
     if not celdas:
-        return {"scoreMasa": 0, "scoreVolumen": 0}
+        return {"scoreMasa": 0, "scoreVolumen": 0, "scoreVolumenPorPersona": 0}
 
     masaTotal = sum(c['props']['masa'] for c in celdas)
     
@@ -88,7 +92,15 @@ def calcularScoresIngenieria(celdas):
     scoreVolumenLog = math.log10(1 + max(0, volumenHabitable))
     scoreVolumen = _normalize(scoreVolumenLog, 2, 4) # log(100) a log(10000)
     
-    return {"scoreMasa": scoreMasa, "scoreVolumen": scoreVolumen}
+    areaTotal = HABITAT_WIDTH_M * HABITAT_HEIGHT_M
+    volumenHabitable = areaTotal - len(celdas)
+    volumenPorPersona = volumenHabitable / cantidadTripulacion if cantidadTripulacion > 0 else 0
+    
+    # Usamos los valores de los papers: el óptimo está alrededor de 37 m³/persona
+    # Premiamos estar cerca de ese ideal, penalizando tanto por debajo como muy por encima.
+    scoreVolumenPorPersona = _normalize(volumenPorPersona, 5, 20)
+    
+    return {"scoreMasa": scoreMasa, "scoreVolumen": scoreVolumen, "scoreVolumenPorPersona": scoreVolumenPorPersona}
 
 def calcularScoresLayout(celdas):
     """Calcula scores espaciales: Zonificación, Adyacencias y Privacidad."""
@@ -249,20 +261,35 @@ def calcularScoreErgonomia(celdas):
     # El score ya está normalizado entre 0 y 1 por la naturaleza del cálculo
     return {"scoreErgonomia": scoreErgonomia}
 
-def generarScoresHabitat(habitatLayout):
+def calcularScoreSostenibilidad(materialEstructuralGlobal):
+    materialScores = {'ISRU-derivado': 1.0, 'Compuesto': 0.6, 'Aluminio': 0.2}
+    return {"scoreSostenibilidad": materialScores.get(materialEstructuralGlobal, 0.1)}
+
+def calcularScoreProteccionRadiacion(resistenciaRadiacionGlobal):
+    return {"scoreProteccionRadiacion": _normalize(resistenciaRadiacionGlobal, 1, 10)}
+
+def generarScoresHabitat(habitatLayout, contextoMision):
     """Orquesta el cálculo de todos los sub-scores para un único hábitat."""
     scores = {'habitatId': habitatLayout.get('id', 'N/A')}
     celdas = habitatLayout.get('cells', [])
     
-    scores['scoreChecklist'] = calcularScoreChecklist(celdas)
+
+    cantidadTripulacion = contextoMision.get('cantidadTripulacion', 4)
+    materialEstructural = contextoMision.get('materialEstructural', 'Inflable')
+    resistenciaRadiacion = contextoMision.get('resistenciaRadiacion', 7)
+    
+    scores['scoreChecklist'] = calcularScoreChecklist(celdas, cantidadTripulacion)
     
     if scores['scoreChecklist'] > 0:
-        scores.update(calcularScoresIngenieria(celdas))
+        scores.update(calcularScoresIngenieria(celdas, cantidadTripulacion))
         scores.update(calcularScoresLayout(celdas))
         scores.update(calcularScoresTecnologicos(celdas))
         scores.update(calcularScoreVistaEspacial(celdas))
         scores.update(calcularScoreAreaDeTrabajo(celdas))
         scores.update(calcularScoreErgonomia(celdas))
+        scores.update(calcularScoreSostenibilidad(materialEstructural))
+        scores.update(calcularScoreProteccionRadiacion(resistenciaRadiacion))
+        
     else:
         keys = ["scoreMasa", "scoreVolumen", "scoreZonificacion", 
                 "scoreAdyacencias", "scorePrivacidad", "scoreSostenibilidad"]
@@ -271,13 +298,7 @@ def generarScoresHabitat(habitatLayout):
             
     return scores
 
-def exportarScoresACSV(listaDeHabitats, nombreArchivo):
-    """Procesa una lista de hábitats y exporta sus scores a un archivo CSV."""
-    todosLosScores = [generarScoresHabitat(h) for h in listaDeHabitats]
-    df = pd.DataFrame(todosLosScores)
-    df.to_csv(nombreArchivo, index=False)
-    print(f"\n✅ Scores exportados exitosamente a '{nombreArchivo}'")
-    return df
+
 
 # --- 4. EJEMPLO DE USO ---
 
@@ -295,12 +316,23 @@ if __name__ == '__main__':
         {"x": 30, "y": 30, "type": "SCIENCE", "props": {"masa": 2500, "volumen": 20, "costo": 20, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "ISRU-derivado", "resistenciaRadiacion": 8}},
         {"x": 15, "y": 75, "type": "MEDICAL", "props": {"masa": 800, "volumen": 7, "costo": 15, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 6}},
         {"x": 20, "y": 15, "type": "SOCIAL", "props": {"masa": 1000, "volumen": 20, "costo": 5, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 5}},
-        {"x": 5, "y": 50, "type": "AIRLOCK", "props": {"masa": 3000, "volumen": 10, "costo": 25, "limpieza": 0.0, "permanencia": 2, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 7}}
+        {"x": 5, "y": 50, "type": "AIRLOCK", "props": {"masa": 3000, "volumen": 10, "costo": 25, "limpieza": 0.0, "permanencia": 2, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 7}},
+        {"x": 90, "y": 10, "type": "LOGISTICS", "props": {"masa": 600, "volumen": 6, "costo": 6, "limpieza": 0.5, "permanencia": 1, "tipoMaterial": "Aluminio", "resistenciaRadiacion": 4}},
+        {"x": 60, "y": 20, "type": "MISSION PLANNING", "props": {"masa": 700, "volumen": 8, "costo": 9, "limpieza": 1.0, "permanencia": 0, "tipoMaterial": "Compuesto", "resistenciaRadiacion": 5}}
       ]
     }
+    contextoAlpha = {
+        "cantidadTripulacion": 1,
+        "materialEstructural": "Compuesto",
+        "resistenciaRadiacion": 7
+    }
 
-    nombreArchivoSalida = 'habitat_scores_final.csv'
-    dfResultados = exportarScoresACSV([layoutEjemplo], nombreArchivoSalida)
+    # Creamos una lista de tuplas, donde cada tupla es (layout, contexto)
+    misHabitats = [(layoutEjemplo, contextoAlpha)]
 
+    nombreArchivoSalida = 'habitat_scores_con_contexto.csv'
+    dfResultados = pd.DataFrame([generarScoresHabitat(l, c) for l, c in misHabitats])
+
+    print(f"\n Scores exportados exitosamente a '{nombreArchivoSalida}'")
     print("\n--- Contenido del CSV generado ---")
     print(dfResultados.to_string())
