@@ -1,0 +1,260 @@
+import math
+import pandas as pd
+import json
+
+# --- 1. CONFIGURACIÓN Y DATOS DE ENTRADA ---
+
+HABITAT_WIDTH_M = 100
+HABITAT_HEIGHT_M = 100
+
+# --- 2. FUNCIONES DE CÁLCULO DE SCORES ---
+
+def _normalize(value, minVal, maxVal):
+    """Normaliza un valor a una escala de 0 a 1 usando Min-Max."""
+    if maxVal == minVal:
+        return 0.5
+    value = max(minVal, min(value, maxVal))
+    return (value - minVal) / (maxVal - minVal)
+
+def cargarChecklistDict(path='checklist.csv'):
+    columnas = [
+        'hay_modulos_ejercicio',
+        'hay_modulos_social_recreacion',
+        'hay_modulos_alimentos',
+        'hay_modulos_higiene',
+        'hay_modulos_medicos',
+        'hay_modulos_habitacion_privada',
+        'hay_modulos_mantenimiento',
+        'hay_modulos_planeación_de_misiones',
+        'hay_modulos_gestion_residuos',
+        'hay_modulos_logistica',
+        'hay_modulos_laboratorio',
+        'hay_modulos_airlock'
+    ]
+    df = pd.read_csv(path)
+    return {
+        tuple(row[col] for col in columnas): row['resultado']
+        for _, row in df.iterrows()
+    }
+
+CHECKLIST_DICT = cargarChecklistDict()
+
+def calcularScoreBaseChecklist(modulos):
+    columnas = [
+        'hay_modulos_ejercicio',
+        'hay_modulos_social_recreacion',
+        'hay_modulos_alimentos',
+        'hay_modulos_higiene',
+        'hay_modulos_medicos',
+        'hay_modulos_habitacion_privada',
+        'hay_modulos_mantenimiento',
+        'hay_modulos_planeación_de_misiones',
+        'hay_modulos_gestion_residuos',
+        'hay_modulos_logistica',
+        'hay_modulos_laboratorio',
+        'hay_modulos_airlock'
+    ]
+    moduloACol = {
+        'EXERCISE': 'hay_modulos_ejercicio',
+        'SOCIAL/RECREATION': 'hay_modulos_social_recreacion',
+        'FOOD': 'hay_modulos_alimentos',
+        'HYGIENE': 'hay_modulos_higiene',
+        'MEDICAL': 'hay_modulos_medicos',
+        'PRIVATE HABITATION': 'hay_modulos_habitacion_privada',
+        'MAINTENANCE': 'hay_modulos_mantenimiento',
+        'MISSION PLANNING': 'hay_modulos_planeación_de_misiones',
+        'WASTE MANAGEMENT': 'hay_modulos_gestion_residuos',
+        'LOGISTICS': 'hay_modulos_logistica',
+        'LABORATORY': 'hay_modulos_laboratorio',
+        'AIRLOCK': 'hay_modulos_airlock'
+    }
+    presencia = {col: 0.0 for col in columnas}
+    for m in modulos:
+        nombre = m['modulo'].upper()
+        if nombre in moduloACol:
+            presencia[moduloACol[nombre]] = 1.0
+    key = tuple(presencia[col] for col in columnas)
+    return CHECKLIST_DICT.get(key, 0.0)
+
+def calcularScoreMasaYVolumen(modulos):
+    """
+    Calcula scores relacionados con la masa y el volumen.
+    """
+    if not modulos:
+        return {"scoreMasa": 0, "scoreEficienciaVolumen": 0}
+
+    masaTotal = sum(m['atributos']['masa'] for m in modulos)
+    volumenOcupado = sum(m['atributos']['volumen'] for m in modulos)
+    
+    # Menos masa es mejor. Normalizado.
+    scoreMasa = max(0, 1 - _normalize(masaTotal, 500, 10000))
+
+    # Más volumen habitable es mejor, con rendimientos decrecientes. Normalizado.
+    areaTotal = HABITAT_WIDTH_M * HABITAT_HEIGHT_M
+    volumenHabitable = areaTotal - volumenOcupado
+    scoreVolumenLog = math.log10(1 + max(0, volumenHabitable))
+    scoreEficienciaVolumen = _normalize(scoreVolumenLog, 1, 3) # Asumiendo log(10)=1 y log(1000)=3
+    
+    return {
+        "scoreMasa": scoreMasa,
+        "scoreEficienciaVolumen": scoreEficienciaVolumen
+    }
+
+def calcularScoreProteccionYDurabilidad(modulos):
+    """
+    Calcula el score de protección basado en la resistencia a la radiación.
+    """
+    if not modulos:
+        return {"scoreProteccionRadiacion": 0}
+        
+    totalResistencia = sum(m['atributos']['resistenciaRadiacion'] for m in modulos)
+    scoreRadiacion = totalResistencia / len(modulos)
+    
+    # Normalizamos asumiendo una escala de 1 a 10 para la resistencia.
+    scoreProteccionRadiacion = _normalize(scoreRadiacion, 1, 10)
+    
+    return {"scoreProteccionRadiacion": scoreProteccionRadiacion}
+
+def calcularScoreLayoutZonificacion(modulos):
+    """
+    Mide la separación entre zonas 'limpias' y 'sucias', ignorando las neutras.
+    """
+    # El atributo 'ensuciable' ahora puede ser True, False, o None (neutro)
+    puntosLimpios = [(m['x'], m['y']) for m in modulos if m['atributos']['ensuciable'] is False]
+    puntosSucios = [(m['x'], m['y']) for m in modulos if m['atributos']['ensuciable'] is True]
+    
+    if not puntosLimpios or not puntosSucios:
+        return {"scoreZonificacion": 0.5} # Valor neutral si no hay ambas zonas
+
+    # Calcular centroides
+    cxLimpio = sum(p[0] for p in puntosLimpios) / len(puntosLimpios)
+    cyLimpio = sum(p[1] for p in puntosLimpios) / len(puntosLimpios)
+    cxSucio = sum(p[0] for p in puntosSucios) / len(puntosSucios)
+    cySucio = sum(p[1] for p in puntosSucios) / len(puntosSucios)
+    
+    distancia = math.sqrt((cxLimpio - cxSucio)**2 + (cyLimpio - cySucio)**2)
+    maxDist = math.sqrt(HABITAT_WIDTH_M**2 + HABITAT_HEIGHT_M**2)
+    
+    scoreZonificacion = _normalize(distancia, 0, maxDist * 0.75)
+    
+    return {"scoreZonificacion": scoreZonificacion}
+
+def calcularScoreBienestarPsicologico(modulos):
+    """
+    Evalúa la separación de áreas privadas de las comunes/ruidosas.
+    """
+    modulosPrivados = [m for m in modulos if m['modulo'] == 'PRIVATE HABITATION']
+    modulosRuidosos = [m for m in modulos if m['modulo'] in ['SOCIAL/RECREATION', 'EXERCISE']]
+
+    if not modulosPrivados or not modulosRuidosos:
+        return {"scorePrivacidad": 0.5}
+
+    distanciasTotales = 0
+    for priv in modulosPrivados:
+        distARuido = sum(math.sqrt((priv['x'] - r['x'])**2 + (priv['y'] - r['y'])**2) for r in modulosRuidosos)
+        distanciasTotales += distARuido / len(modulosRuidosos)
+    
+    distanciaPromedio = distanciasTotales / len(modulosPrivados)
+    maxDist = math.sqrt(HABITAT_WIDTH_M**2 + HABITAT_HEIGHT_M**2)
+    
+    scorePrivacidad = _normalize(distanciaPromedio, 0, maxDist * 0.5)
+    
+    return {"scorePrivacidad": scorePrivacidad}
+
+def calcularScoreSostenibilidad(modulos):
+    """
+    Mide el nivel de avance tecnológico y autosuficiencia basado en materiales.
+    """
+    if not modulos:
+        return {"scoreSostenibilidad": 0}
+        
+    materialScores = {'ISRU-derivado': 1.0, 'Compuesto': 0.6, 'Aluminio': 0.2}
+    scoreMaterialTotal = sum(materialScores.get(m['atributos']['tipoMaterial'], 0.1) for m in modulos)
+    
+    scoreSostenibilidad = scoreMaterialTotal / len(modulos)
+    return {"scoreSostenibilidad": scoreSostenibilidad}
+
+# --- 3. FUNCIONES ORQUESTADORAS ---
+
+def generarScoresHabitat(habitatLayout, modulosEsenciales):
+    """
+    Orquesta el cálculo de todos los sub-scores para un único hábitat.
+    """
+    # Añadimos el ID del hábitat para identificarlo en el CSV
+    scores = {'habitatId': habitatLayout.get('id', 'N/A')}
+
+    modulos = habitatLayout.get('modulos', [])
+    
+    scores['scoreChecklist'] = calcularScoreBaseChecklist(modulos, modulosEsenciales)
+    
+    # Solo calcular scores detallados si el checklist es exitoso
+    if scores['scoreChecklist'] > 0:
+        scores.update(calcularScoreMasaYVolumen(modulos))
+        scores.update(calcularScoreProteccionYDurabilidad(modulos))
+        scores.update(calcularScoreLayoutZonificacion(modulos))
+        scores.update(calcularScoreBienestarPsicologico(modulos))
+        scores.update(calcularScoreSostenibilidad(modulos))
+    else:
+        # Rellenar con 0 si el checklist falla para tener un CSV consistente
+        keys = ["scoreMasa", "scoreEficienciaVolumen", "scoreProteccionRadiacion", 
+                "scoreZonificacion", "scorePrivacidad", "scoreSostenibilidad"]
+        for key in keys:
+            scores[key] = 0.0
+
+    return scores
+
+def exportarScoresACSV(listaDeHabitats, nombreArchivo, modulosEsenciales):
+    """
+    Procesa una lista de diseños de hábitats y exporta sus scores a un archivo CSV.
+    """
+    todosLosScores = []
+    for habitat in listaDeHabitats:
+        scores = generarScoresHabitat(habitat, modulosEsenciales)
+        todosLosScores.append(scores)
+        
+    df = pd.DataFrame(todosLosScores)
+    df.to_csv(nombreArchivo, index=False)
+    print(f"\n✅ Scores exportados exitosamente a '{nombreArchivo}'")
+    return df
+
+# --- 4. EJEMPLO DE USO ---
+
+if __name__ == '__main__':
+    
+    MODULOS_ESENCIALES_EJEMPLO = [
+        'FOOD', 'HYGIENE', 'PRIVATE HABITATION', 
+        'WASTE MANAGEMENT', 'AIRLOCK', 'MEDICAL'
+    ]
+
+    # Ahora podemos procesar múltiples hábitats a la vez
+    misHabitats = [
+        {
+            "id": "habitat_alpha",
+            "modulos": [
+                {'modulo': 'FOOD', 'x': 2, 'y': 8, 'atributos': {'masa': 2000, 'volumen': 10, 'ensuciable': True, 'permanencia': 0.8, 'tipoMaterial': 'Compuesto', 'resistenciaRadiacion': 5}},
+                {'modulo': 'PRIVATE HABITATION', 'x': 90, 'y': 90, 'atributos': {'masa': 1500, 'volumen': 12, 'ensuciable': False, 'permanencia': 0.9, 'tipoMaterial': 'Compuesto', 'resistenciaRadiacion': 6}},
+                {'modulo': 'HYGIENE', 'x': 8, 'y': 8, 'atributos': {'masa': 1000, 'volumen': 8, 'ensuciable': True, 'permanencia': 0.8, 'tipoMaterial': 'Aluminio', 'resistenciaRadiacion': 4}},
+                {'modulo': 'WASTE MANAGEMENT', 'x': 9, 'y': 9, 'atributos': {'masa': 500, 'volumen': 5, 'ensuciable': True, 'permanencia': 0.9, 'tipoMaterial': 'Aluminio', 'resistenciaRadiacion': 4}},
+                {'modulo': 'MEDICAL', 'x': 20, 'y': 80, 'atributos': {'masa': 800, 'volumen': 7, 'ensuciable': False, 'permanencia': 0.95, 'tipoMaterial': 'Compuesto', 'resistenciaRadiacion': 6}},
+                {'modulo': 'AIRLOCK', 'x': 0, 'y': 50, 'atributos': {'masa': 3000, 'volumen': 10, 'ensuciable': True, 'permanencia': 0.9, 'tipoMaterial': 'Aluminio', 'resistenciaRadiacion': 7}},
+                {'modulo': 'MAINTENANCE', 'x': 50, 'y': 50, 'atributos': {'masa': 400, 'volumen': 15, 'ensuciable': None, 'permanencia': 0.6, 'tipoMaterial': 'Aluminio', 'resistenciaRadiacion': 5}},
+            ]
+        },
+        {
+            "id": "habitat_beta_incompleto",
+            "modulos": [
+                # A este le falta el módulo MEDICAL, por lo que su score base será 0
+                {'modulo': 'FOOD', 'x': 10, 'y': 10, 'atributos': {'masa': 2000, 'volumen': 10, 'ensuciable': True, 'permanencia': 0.8, 'tipoMaterial': 'ISRU-derivado', 'resistenciaRadiacion': 9}},
+                {'modulo': 'PRIVATE HABITATION', 'x': 15, 'y': 15, 'atributos': {'masa': 1500, 'volumen': 12, 'ensuciable': False, 'permanencia': 0.9, 'tipoMaterial': 'ISRU-derivado', 'resistenciaRadiacion': 9}},
+                {'modulo': 'HYGIENE', 'x': 80, 'y': 80, 'atributos': {'masa': 1000, 'volumen': 8, 'ensuciable': True, 'permanencia': 0.8, 'tipoMaterial': 'Compuesto', 'resistenciaRadiacion': 6}},
+                {'modulo': 'WASTE MANAGEMENT', 'x': 85, 'y': 85, 'atributos': {'masa': 500, 'volumen': 5, 'ensuciable': True, 'permanencia': 0.9, 'tipoMaterial': 'Compuesto', 'resistenciaRadiacion': 6}},
+                {'modulo': 'AIRLOCK', 'x': 50, 'y': 0, 'atributos': {'masa': 3000, 'volumen': 10, 'ensuciable': True, 'permanencia': 0.9, 'tipoMaterial': 'Compuesto', 'resistenciaRadiacion': 7}},
+            ]
+        }
+    ]
+    
+    nombreArchivoSalida = 'habitat_scores.csv'
+    dfResultados = exportarScoresACSV(misHabitats, nombreArchivoSalida, MODULOS_ESENCIALES_EJEMPLO)
+
+    print("\n--- Contenido del CSV generado ---")
+    print(dfResultados.to_string())
