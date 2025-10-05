@@ -12,8 +12,7 @@ quitar_columnas = ['habitatId','calificacionExperto','scoreMasa','scoreSostenibi
 X = df.drop(quitar_columnas, axis=1)
 
 y = df['calificacionExperto']
-#Normalizamos y, la mejor puntuación vale 1 y la peor puntuación vale 0
-y = (y - y.min()) / (y.max() - y.min())
+
 
 #Dividir datos en entrenamiento y prueba
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
